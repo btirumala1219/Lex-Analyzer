@@ -1,55 +1,43 @@
+//Barath Tirumala
+
 
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-/**CONSTANTS**/
 #define MAX_ID_LEN 11
 #define MAX_NUM_LEN 5
 
-/**FUNCTION PROTOTYPES**/
 
-//Input: String, s.
-//Output: If s is a reserved word, return the numerical token value; otherwise, return -1.
 int isReservedWord( char* s );
 
-//Input: String, s.
-//Output: If s is a special symbol, return 1; otherwise, return -1.
+
 int isSpecialSymbol( char c );
 
-//Input: Token, s.
-//Output: If the token contains a lexical error, print an error message and return 1; otherwise, return 0.
+
 int detectError( char *s );
 
-//Input: Valid token, s.
-//Output: Return the numerical token value of s.
+
 int isOtherValid( char *s );
 
-/**MAIN FUNCTION**/
 
 int main( void ){
 
-    int i; //Loop counter.
-    int tempTokCtr = 0; //Count number of tokens.
+    int i;
+    int tempTokCtr = 0;
 
-    char buffer[ 10000 ]; //For reading in tokens.
-    char temp[ 10000 ]; //Back-up buffer.
+    char buffer[ 10000 ];
+    char temp[ 10000 ];
 
-    //Prompt user for source program name.
-    char sp[50]; //Name of input file.
+    char sp[50]; //Name of input file
     printf( "What is the file name for your source program?\n" );
     scanf( "%s", sp );
 
-    //Open file input stream to main input (the program).
+
     FILE *fin = fopen( sp, "r" );
 
-    //Open file output stream to intermediary output file.
-    //In this file, unprocessed tokens will be stored for further processing.
     FILE *temp_fout = fopen( "temp_output.txt", "w" );
 
-    //Procedure for creating intermediary output.
-    /** BEGIN PROCEDURE **/
     while( fscanf( fin, "%s", buffer ) != EOF ){
 
         int len = (int) strlen( buffer ); //Length of read-in token.
@@ -57,8 +45,6 @@ int main( void ){
         //For the length of the read-in token:
         for( i = 0; i < len; i++ ){
 
-            //If we've reached the end of the buffer, and it's not a special symbol, print the token.
-            //If invalid symbols are present, they're ignored and taken care of later.
             if( i == len-1 && !isSpecialSymbol( buffer[ i ] ) ){
                 fprintf( temp_fout, "%s ", buffer );
                 tempTokCtr++; //Increment the token counter.
@@ -67,7 +53,6 @@ int main( void ){
             //If the i-th element of the token is a special symbol.
             else if( isSpecialSymbol( buffer[ i ] ) ){
 
-                //Brute force examine particular token cases: comment tokems, not equal, less-than-or-equal, ... , null, and odd.
                 if( len > 1 ){
                     if( buffer[ i ] == '/' && buffer[ i+1 ] == '*' ){
                         strncpy( temp, buffer, i );
@@ -198,15 +183,12 @@ int main( void ){
                     fprintf( temp_fout, "%c ", buffer[i] );
                     tempTokCtr++; //Increment token counter.
 
-                    //Shift buffer, and update loop index.
-                    //Similar procedure used for brute force token examination, and further token examination.
                     strncpy( buffer, &buffer[i]+1, len-1 );
                     buffer[ len - 1 ] = '\0';
                     len = (int) strlen( buffer );
                     i = -1;
                 }
 
-                //Valid symbol is splitting tokens within the buffer; split, print, and shift the tokens left of the valid symbol, including the symbol.
                 if( i > 0 ){
                     strncpy( temp, buffer, i );
                     temp[ i ] = '\0';
@@ -228,13 +210,9 @@ int main( void ){
         }
 
     }
-    /** END OF PROCEDURE **/
-
-    //Resource management.
     fclose( temp_fout );
     fclose( fin );
 
-    //Open file input stream to intermediary output created by the procedure above (unprocessed tokens).
     fin = fopen( "temp_output.txt", "r" );
     FILE *table = fopen( "lexeme_table.txt", "w" ); //Will hold the lexeme table.
     FILE *list = fopen( "lexeme_list.txt", "w" ); //Will hold the lexeme list.
@@ -242,19 +220,15 @@ int main( void ){
     //Print header for lexeme table.
     fprintf( table, "Lexeme Table:\n%15s%15s\n", "lexeme", "token type");
 
-    //Procedure to examine printed tokens.
-
-    /** BEGIN PROCEDURE **/
 
     //Initialize.
-    int isResWord = -1; //If currently examined token is a reserved word, != -1; otherwise, = -1.
-    int len = 0; //Length of examined token.
-    int isComment = 0; //If currently reading in a comment, = 1; otherwise, = 0.
+    int isResWord = -1;
+    int len = 0;
+    int isComment = 0;
 
     //For the length of tokens.
     while( fscanf( fin, "%s ", buffer ) != EOF ){
 
-        //fscanf( fin, "%s", buffer ); //Read in token.
         len = (int) strlen( buffer ); //Get token string length.
 
         //Recognize beginning of comment block.
@@ -267,7 +241,6 @@ int main( void ){
             isComment = 0;
         }
 
-        //Only read in tokens while not examining a comment block.
         else if( !isComment ){
 
             //Error detection by token.
@@ -278,7 +251,6 @@ int main( void ){
                 exit( 0 );
             }
 
-            //Is the current token a reserved word? Print to table and list appropriately.
             isResWord = isReservedWord( buffer );
 
             if( isResWord != -1 ){
@@ -288,7 +260,6 @@ int main( void ){
 
             }
 
-            //Is the current token an identifier? Print to table and list appropriately.
             else if( isalpha( buffer[0] ) ){
 
                 fprintf( table, "%15s%15d\n", buffer, 2 );
@@ -296,7 +267,7 @@ int main( void ){
 
             }
 
-            //Is the current token a number? Print to table and list appropriately.
+
             else if( isdigit( buffer[0] ) ){
 
                 fprintf( table, "%15s%15d\n", buffer, 3 );
@@ -304,7 +275,7 @@ int main( void ){
 
             }
 
-            //Otherwise, our token is some other valid symbol (checked for errors above). Print appropriately.
+
             else{
 
                 fprintf( table, "%15s%15d\n", buffer, isOtherValid( buffer ) );
@@ -316,43 +287,51 @@ int main( void ){
 
     }
 
-    //Resource management.
     fclose( fin );
+
+    char c;
+    // Read contents from file
+    c = fgetc(table);
+    while (c != EOF)
+    {
+        printf ("%c", c);
+        c = fgetc(table);
+    }
+
+    c = fgetc(list);
+    while (c != EOF)
+    {
+        printf ("%c", c);
+        c = fgetc(list);
+    }
+
+
     fclose( table );
     fclose( list );
 
-    /** END OF PROCEDURE **/
+    fin = fopen( sp, "r" );
+    FILE *source = fopen( "source_program.txt", "w" );
+    char copy;
 
-    //Procedure to copy and source program.
-    /** BEGIN PROCEDURE **/
-
-    fin = fopen( sp, "r" ); //File containing source program.
-    FILE *source = fopen( "source_program.txt", "w" ); //File to copy source program to.
-    char copy; //Used to copy file, character by character.
-
-    //Copy character by character, until end of file.
     while( ( copy = fgetc( fin ) ) != EOF )
         fputc( copy, source );
-
-    //Resource management.
     fclose( fin );
     fclose( source );
-    remove( "temp_output.txt" ); //Delete intermediary output.
+    remove( "temp_output.txt" );
 
-    /** END OF PROCEDURE **/
+
 
     return 0;
 
-} //End of main.
+}
 
-/**FUNCTION DECLARATIONS**/
 
 int detectError( char *s ){
 
     int i;
     int len = (int) strlen( s );
 
-    //Check for single colon token.
+
     if( len == 1 && s[0] == ':' ){
         printf( "Error: Invalid Symbol: :\n" );
         return 1;
@@ -367,10 +346,10 @@ int detectError( char *s ){
         }
     }
 
-    //Single letter & single number accepted, so if s > 1.
+
     if( len > 1 ){
 
-        //Check identifier length.
+
         if( isalpha( s[0] ) ){
             for( i = 1; i < len; i++ ){
                 if( i > MAX_ID_LEN ){
@@ -382,7 +361,7 @@ int detectError( char *s ){
 
         if( isdigit( s[0] ) ){
 
-            //Check invalid identifier (starts with number).
+
             for( i = 1; i < len; i++ ){
 
                 if( isalpha( s[i] ) ){
@@ -392,7 +371,6 @@ int detectError( char *s ){
 
             }
 
-            //Check number length.
             if( i > MAX_NUM_LEN ){
                 printf( "Error: Number %s is too long.\n", s );
                 return 1;
@@ -404,7 +382,7 @@ int detectError( char *s ){
 
     return 0;
 
-} //End of detectError.
+}
 
 int isSpecialSymbol( char c ){
 
@@ -437,7 +415,7 @@ int isSpecialSymbol( char c ){
 
     return 0;
 
-} //end of isSpecialSymbol.
+}
 
 
 int isReservedWord( char* s ){
@@ -473,7 +451,7 @@ int isReservedWord( char* s ){
 
     return -1;
 
-} //End of isReservedWord.
+}
 
 int isOtherValid( char *s ){
 
@@ -514,4 +492,4 @@ int isOtherValid( char *s ){
     else if( !strcmp( s, ">" ) )
         return 13;
 
-} //End of isOtherValid.
+}
